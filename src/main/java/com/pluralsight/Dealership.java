@@ -2,7 +2,8 @@ package com.pluralsight;
 
 import java.util.ArrayList;
 
-// This class represents a car dealership and stores a list of vehicles
+// The Dealership class stores information about the dealership
+// and manages a list of Vehicle objects
 public class Dealership {
     private String name;
     private String address;
@@ -32,7 +33,7 @@ public class Dealership {
         return inventory;
     }
 
-    // Search methods (we will complete these later)
+    // Search methods (placeholders for now)
     public ArrayList<Vehicle> getVehiclesByPrice(double min, double max) { return null; }
     public ArrayList<Vehicle> getVehiclesByMakeModel(String make, String model) { return null; }
     public ArrayList<Vehicle> getVehiclesByYear(int minYear, int maxYear) { return null; }
