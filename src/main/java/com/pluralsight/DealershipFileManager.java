@@ -2,22 +2,32 @@ package com.pluralsight;
 
 import java.io.*;
 
-// This class handles reading and saving dealership data from a CSV file
+// The DealershipFileManager class is responsible for
+// reading data from dealership.csv and saving updates back to the file.
 public class DealershipFileManager {
 
-    // Reads dealership info and vehicles from the CSV file
+    // Loads dealership info and vehicles from the CSV file
     public Dealership getDealership() {
         Dealership dealership = null;
-        try {
-            BufferedReader reader = new BufferedReader(new FileReader("dealership.csv"));
-            String dealershipInfo = reader.readLine();
-            String[] parts = dealershipInfo.split("\\|");
 
+        try (BufferedReader reader = new BufferedReader(new FileReader("dealership.csv"))) {
+
+            // Read the first line: dealership info
+            String dealershipInfo = reader.readLine();
+            if (dealershipInfo == null) {
+                System.out.println("Error: dealership.csv file is empty!");
+                return null;
+            }
+
+            // Split the first line into name, address, and phone
+            String[] parts = dealershipInfo.split("\\|");
             dealership = new Dealership(parts[0], parts[1], parts[2]);
 
+            // Read the rest of the lines: each one is a Vehicle
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] data = line.split("\\|");
+
                 int vin = Integer.parseInt(data[0]);
                 int year = Integer.parseInt(data[1]);
                 String make = data[2];
@@ -31,30 +41,32 @@ public class DealershipFileManager {
                 dealership.addVehicle(vehicle);
             }
 
-            reader.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Error reading dealership.csv: " + e.getMessage());
         }
 
         return dealership;
     }
 
-    // Saves dealership and all vehicles back into dealership.csv
+    // Saves dealership info and vehicles back into dealership.csv
     public void saveDealership(Dealership dealership) {
-        try {
-            BufferedWriter writer = new BufferedWriter(new FileWriter("dealership.csv"));
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("dealership.csv"))) {
+
+            // Write dealership info (first line)
             writer.write(dealership.getName() + "|" + dealership.getAddress() + "|" + dealership.getPhone());
             writer.newLine();
 
+            // Write all vehicle data (following lines)
             for (Vehicle v : dealership.getAllVehicles()) {
                 writer.write(v.getVin() + "|" + v.getYear() + "|" + v.getMake() + "|" + v.getModel() + "|" +
                         v.getType() + "|" + v.getColor() + "|" + v.getOdometer() + "|" + v.getPrice());
                 writer.newLine();
             }
 
-            writer.close();
+            System.out.println("Dealership data saved successfully!");
+
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Error saving dealership.csv: " + e.getMessage());
         }
     }
 }
