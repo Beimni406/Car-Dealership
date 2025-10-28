@@ -28,4 +28,8 @@ public class Vehicle {
     public String toString() {
         return year + " " + make + " " + model + " (" + color + ") - $" + price;
     }
+
+    public int getVin() {
+        return 0;
+    }
 }
