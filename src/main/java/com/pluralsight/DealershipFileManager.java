@@ -1,72 +1,132 @@
 package com.pluralsight;
 
-import java.io.*;
+import java.util.ArrayList;
+import java.util.Scanner;
 
-// The DealershipFileManager class is responsible for
-// reading data from dealership.csv and saving updates back to the file.
-public class DealershipFileManager {
+// The UserInterface class provides a simple text menu
+// that allows users to view and interact with dealership data.
+public class UserInterface {
+    private DealershipFileManager fileManager;
+    private Dealership dealership;
+    private Scanner scanner;
 
-    // Loads dealership info and vehicles from the CSV file
-    public Dealership getDealership() {
-        Dealership dealership = null;
-
-        try (BufferedReader reader = new BufferedReader(new FileReader("dealership.csv"))) {
-
-            // Read the first line: dealership info
-            String dealershipInfo = reader.readLine();
-            if (dealershipInfo == null) {
-                System.out.println("Error: dealership.csv file is empty!");
-                return null;
-            }
-
-            // Split the first line into name, address, and phone
-            String[] parts = dealershipInfo.split("\\|");
-            dealership = new Dealership(parts[0], parts[1], parts[2]);
-
-            // Read the rest of the lines: each one is a Vehicle
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] data = line.split("\\|");
-
-                int vin = Integer.parseInt(data[0]);
-                int year = Integer.parseInt(data[1]);
-                String make = data[2];
-                String model = data[3];
-                String type = data[4];
-                String color = data[5];
-                int odometer = Integer.parseInt(data[6]);
-                double price = Double.parseDouble(data[7]);
-
-                Vehicle vehicle = new Vehicle(vin, year, make, model, type, color, odometer, price);
-                dealership.addVehicle(vehicle);
-            }
-
-        } catch (IOException e) {
-            System.out.println("Error reading dealership.csv: " + e.getMessage());
-        }
-
-        return dealership;
+    // Constructor: sets up scanner and file manager
+    public UserInterface() {
+        fileManager = new DealershipFileManager();
+        scanner = new Scanner(System.in);
     }
 
-    // Saves dealership info and vehicles back into dealership.csv
-    public void saveDealership(Dealership dealership) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter("dealership.csv"))) {
+    // Starts the program
+    public void display() {
+        dealership = fileManager.getDealership();
 
-            // Write dealership info (first line)
-            writer.write(dealership.getName() + "|" + dealership.getAddress() + "|" + dealership.getPhone());
-            writer.newLine();
-
-            // Write all vehicle data (following lines)
-            for (Vehicle v : dealership.getAllVehicles()) {
-                writer.write(v.getVin() + "|" + v.getYear() + "|" + v.getMake() + "|" + v.getModel() + "|" +
-                        v.getType() + "|" + v.getColor() + "|" + v.getOdometer() + "|" + v.getPrice());
-                writer.newLine();
-            }
-
-            System.out.println("Dealership data saved successfully!");
-
-        } catch (IOException e) {
-            System.out.println("Error saving dealership.csv: " + e.getMessage());
+        if (dealership == null) {
+            System.out.println("Error loading dealership. Check dealership.csv file.");
+            return;
         }
+
+        System.out.println("Welcome to " + dealership.getName() + "!");
+        boolean running = true;
+
+        while (running) {
+            System.out.println("\n========== Dealership Menu ==========");
+            System.out.println("1. View All Vehicles");
+            System.out.println("2. Search by Price Range");
+            System.out.println("3. Search by Make/Model");
+            System.out.println("4. Exit");
+            System.out.print("Enter your choice: ");
+
+            int choice = getIntInput();
+
+            switch (choice) {
+                case 1:
+                    displayAllVehicles();
+                    break;
+                case 2:
+                    searchByPrice();
+                    break;
+                case 3:
+                    searchByMakeModel();
+                    break;
+                case 4:
+                    running = false;
+                    fileManager.saveDealership(dealership);
+                    System.out.println("Goodbye!");
+                    break;
+                default:
+                    System.out.println("Invalid choice, please try again.");
+                    break;
+            }
+        }
+    }
+
+    // Display all vehicles
+    private void displayAllVehicles() {
+        System.out.println("\n--- All Vehicles ---");
+        ArrayList<Vehicle> vehicles = dealership.getAllVehicles();
+        for (Vehicle v : vehicles) {
+            System.out.println(v);
+        }
+        System.out.println("--------------------");
+    }
+
+    // Search by price range
+    private void searchByPrice() {
+        System.out.print("Enter minimum price: ");
+        double min = getDoubleInput();
+        System.out.print("Enter maximum price: ");
+        double max = getDoubleInput();
+
+        System.out.println("\n--- Vehicles between $" + min + " and $" + max + " ---");
+        ArrayList<Vehicle> vehicles = dealership.getAllVehicles();
+        for (Vehicle v : vehicles) {
+            if (v.getPrice() >= min && v.getPrice() <= max) {
+                System.out.println(v);
+            }
+        }
+    }
+
+    // Search by make/model
+    private void searchByMakeModel() {
+        System.out.print("Enter make: ");
+        String make = scanner.nextLine().trim();
+        System.out.print("Enter model: ");
+        String model = scanner.nextLine().trim();
+
+        System.out.println("\n--- Results for " + make + " " + model + " ---");
+        ArrayList<Vehicle> vehicles = dealership.getAllVehicles();
+        for (Vehicle v : vehicles) {
+            if (v.getMake().equalsIgnoreCase(make) && v.getModel().equalsIgnoreCase(model)) {
+                System.out.println(v);
+            }
+        }
+    }
+
+    // Helper method for safe integer input
+    private int getIntInput() {
+        while (true) {
+            try {
+                return Integer.parseInt(scanner.nextLine());
+            } catch (NumberFormatException e) {
+                System.out.print("Invalid number, try again: ");
+            }
+        }
+    }
+
+    // Helper method for safe double input
+    private double getDoubleInput() {
+        while (true) {
+            try {
+                return Double.parseDouble(scanner.nextLine());
+            } catch (NumberFormatException e) {
+                System.out.print("Invalid number, try again: ");
+            }
+        }
+    }
+
+    // Program entry point
+    public static void main(String[] args) {
+        UserInterface ui = new UserInterface();
+        ui.display();
     }
 }
