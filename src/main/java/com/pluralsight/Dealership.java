@@ -14,7 +14,7 @@ public class Dealership {
         this.name = name;
         this.address = address;
         this.phone = phone;
-        this.inventory = new ArrayList<>(); // start with an empty list
+        this.inventory = new ArrayList<>();
     }
 
     // Getter methods
@@ -30,5 +30,18 @@ public class Dealership {
     // Return all vehicles
     public ArrayList<Vehicle> getAllVehicles() {
         return inventory;
+    }
+
+    // Search methods (we will complete these later)
+    public ArrayList<Vehicle> getVehiclesByPrice(double min, double max) { return null; }
+    public ArrayList<Vehicle> getVehiclesByMakeModel(String make, String model) { return null; }
+    public ArrayList<Vehicle> getVehiclesByYear(int minYear, int maxYear) { return null; }
+    public ArrayList<Vehicle> getVehiclesByColor(String color) { return null; }
+    public ArrayList<Vehicle> getVehiclesByMileage(int min, int max) { return null; }
+    public ArrayList<Vehicle> getVehiclesByType(String type) { return null; }
+
+    // Empty remove method for now
+    public void removeVehicle(Vehicle vehicle) {
+        // to be implemented later
     }
 }
