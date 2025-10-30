@@ -3,132 +3,122 @@ package com.pluralsight;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-// The UserInterface class provides a simple menu-driven interface
-// for interacting with the dealership and its vehicles.
+// UserInterface handles user menu and commands
 public class UserInterface {
-    private DealershipFileManager fileManager;
     private Dealership dealership;
-    private Scanner scanner;
+    private Scanner scanner = new Scanner(System.in);
 
-    // Constructor: initializes the file manager and input scanner
-    public UserInterface() {
-        fileManager = new DealershipFileManager();
-        scanner = new Scanner(System.in);
-    }
-
-    // Main menu display and program loop
     public void display() {
-        dealership = fileManager.getDealership();
-
-        if (dealership == null) {
-            System.out.println("Error: Could not load dealership. Check your dealership.csv file.");
-            return;
-        }
-
-        System.out.println("Welcome to " + dealership.getName() + "!");
-        boolean running = true;
-
-        while (running) {
-            System.out.println("\n========== Dealership Menu ==========");
-            System.out.println("1. View All Vehicles");
-            System.out.println("2. Search by Price Range");
-            System.out.println("3. Search by Make/Model");
-            System.out.println("4. Exit");
-            System.out.print("Enter your choice: ");
-
-            int choice = getIntInput();
-
+        init();
+        int choice;
+        do {
+            displayMenu();
+            choice = scanner.nextInt();
+            scanner.nextLine(); // consume newline
             switch (choice) {
-                case 1:
-                    displayAllVehicles();
-                    break;
-                case 2:
-                    searchByPrice();
-                    break;
-                case 3:
-                    searchByMakeModel();
-                    break;
-                case 4:
-                    fileManager.saveDealership(dealership);
-                    System.out.println("Goodbye! Data saved successfully.");
-                    running = false;
-                    break;
-                default:
-                    System.out.println("Invalid choice. Please try again.");
-                    break;
+                case 1 -> processGetByPriceRequest();
+                case 2 -> processGetByMakeModelRequest();
+                case 3 -> processAllVehiclesRequest();
+                case 8 -> processAddVehicleRequest();
+                case 9 -> processRemoveVehicleRequest();
+                case 99 -> System.out.println("Goodbye!");
+                default -> System.out.println("Invalid choice. Try again.");
+            }
+        } while (choice != 99);
+    }
+
+    private void init() {
+        DealershipFileManager fileManager = new DealershipFileManager();
+        dealership = fileManager.getDealership();
+        System.out.println("Loaded dealership: " + dealership.getName());
+    }
+
+    private void displayMenu() {
+        System.out.println("\n--- " + dealership.getName() + " ---");
+        System.out.println("1 - Find vehicles by price range");
+        System.out.println("2 - Find vehicles by make and model");
+        System.out.println("3 - List all vehicles");
+        System.out.println("8 - Add a vehicle");
+        System.out.println("9 - Remove a vehicle");
+        System.out.println("99 - Quit");
+        System.out.print("Enter your choice: ");
+    }
+
+    private void displayVehicles(ArrayList<Vehicle> vehicles) {
+        if (vehicles.isEmpty()) {
+            System.out.println("No vehicles found.");
+        } else {
+            for (Vehicle v : vehicles) {
+                System.out.println(v);
             }
         }
     }
 
-    // Display all vehicles in inventory
-    private void displayAllVehicles() {
-        System.out.println("\n--- All Vehicles ---");
+    private void processAllVehiclesRequest() {
         ArrayList<Vehicle> vehicles = dealership.getAllVehicles();
-        for (Vehicle v : vehicles) {
-            System.out.println(v);
-        }
-        System.out.println("--------------------");
+        displayVehicles(vehicles);
     }
 
-    // Search vehicles by price range
-    private void searchByPrice() {
+    private void processGetByPriceRequest() {
         System.out.print("Enter minimum price: ");
-        double min = getDoubleInput();
+        double min = scanner.nextDouble();
         System.out.print("Enter maximum price: ");
-        double max = getDoubleInput();
-
-        System.out.println("\n--- Vehicles between $" + min + " and $" + max + " ---");
-        ArrayList<Vehicle> vehicles = dealership.getAllVehicles();
-        for (Vehicle v : vehicles) {
-            if (v.getPrice() >= min && v.getPrice() <= max) {
-                System.out.println(v);
-            }
-        }
-        System.out.println("--------------------");
+        double max = scanner.nextDouble();
+        ArrayList<Vehicle> vehicles = dealership.getVehiclesByPrice(min, max);
+        displayVehicles(vehicles);
     }
 
-    // Search vehicles by make and model
-    private void searchByMakeModel() {
+    private void processGetByMakeModelRequest() {
         System.out.print("Enter make: ");
-        String make = scanner.nextLine().trim();
+        String make = scanner.nextLine();
         System.out.print("Enter model: ");
-        String model = scanner.nextLine().trim();
-
-        System.out.println("\n--- Results for " + make + " " + model + " ---");
-        ArrayList<Vehicle> vehicles = dealership.getAllVehicles();
-        for (Vehicle v : vehicles) {
-            if (v.getMake().equalsIgnoreCase(make) && v.getModel().equalsIgnoreCase(model)) {
-                System.out.println(v);
-            }
-        }
-        System.out.println("--------------------");
+        String model = scanner.nextLine();
+        ArrayList<Vehicle> vehicles = dealership.getVehiclesByMakeModel(make, model);
+        displayVehicles(vehicles);
     }
 
-    // Helper method for safe integer input
-    private int getIntInput() {
-        while (true) {
-            try {
-                return Integer.parseInt(scanner.nextLine());
-            } catch (NumberFormatException e) {
-                System.out.print("Invalid number, try again: ");
-            }
-        }
+    private void processAddVehicleRequest() {
+        System.out.println("Enter vehicle info to add:");
+        System.out.print("VIN: ");
+        int vin = scanner.nextInt();
+        System.out.print("Year: ");
+        int year = scanner.nextInt();
+        scanner.nextLine();
+        System.out.print("Make: ");
+        String make = scanner.nextLine();
+        System.out.print("Model: ");
+        String model = scanner.nextLine();
+        System.out.print("Type: ");
+        String type = scanner.nextLine();
+        System.out.print("Color: ");
+        String color = scanner.nextLine();
+        System.out.print("Odometer: ");
+        int odometer = scanner.nextInt();
+        System.out.print("Price: ");
+        double price = scanner.nextDouble();
+
+        Vehicle vehicle = new Vehicle(vin, year, make, model, type, color, odometer, price);
+        dealership.addVehicle(vehicle);
+        new DealershipFileManager().saveDealership(dealership);
+        System.out.println("Vehicle added!");
     }
 
-    // Helper method for safe double input
-    private double getDoubleInput() {
-        while (true) {
-            try {
-                return Double.parseDouble(scanner.nextLine());
-            } catch (NumberFormatException e) {
-                System.out.print("Invalid number, try again: ");
+    private void processRemoveVehicleRequest() {
+        System.out.print("Enter VIN of vehicle to remove: ");
+        int vin = scanner.nextInt();
+        Vehicle toRemove = null;
+        for (Vehicle v : dealership.getAllVehicles()) {
+            if (v.getVin() == vin) {
+                toRemove = v;
+                break;
             }
         }
-    }
-
-    // Entry point to run the program
-    public static void main(String[] args) {
-        UserInterface ui = new UserInterface();
-        ui.display();
+        if (toRemove != null) {
+            dealership.removeVehicle(toRemove);
+            new DealershipFileManager().saveDealership(dealership);
+            System.out.println("Vehicle removed!");
+        } else {
+            System.out.println("Vehicle not found.");
+        }
     }
 }
